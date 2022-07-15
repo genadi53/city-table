@@ -17,16 +17,16 @@
                     <datalist id="Country">
                         <% for( let index = 0; index < countries.length; index++ ) { %>
                             <option><%= countries[index].country %> </option>
-                            <% } %> 
-                        </datalist>
+                        <% } %> 
+                    </datalist>
 
                     <label for="City">City </label>
                     <input type="text" list="City" name="City" id="city_input" autocomplete="off">
                     <datalist id="City">
                         <% for( let index = 0; index < cities.length; index++ ) { %>
                             <option><%= cities[index].city %> </option>
-                            <% } %> 
-                        </datalist>
+                        <% } %> 
+                    </datalist>
                 </div>
             
                 <div class="mb-1 ms-1">
@@ -43,8 +43,8 @@
         <br />
         <div>
             <h2>Results count: <%= count %> </h2>
-            <table class="table">
-                <thead>
+            <table class="table ms-1">
+                <thead class="table-light">
                   <tr>
                     <th scope="col">id</th>
                     <th scope="col">City</th>
@@ -54,7 +54,7 @@
                     <th scope="col">Population</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody table-group-divider>
                     <% for( let index = 0; index < points.length; index++ ) { %>
                         <tr>
                             <th scope="row"><%= points[index].id %> </th>
@@ -95,14 +95,12 @@
 
             })  
 
-            
             // let cityValue = "";
             // const cityInput = document.getElementById("city_input")
             // cityInput.addEventListener("input", async (e) => {
             //     console.log(cityInput.value)
             //     cityValue = cityInput.value;
             //     if(countryValue){
-                   
             //     }
             // }) 
 
@@ -121,9 +119,6 @@
             }
             to.addEventListener("input", (e) => populationCheck(e))
             from.addEventListener("input", (e) => populationCheck(e))
-
-               
-            
 
 
             function removeAllChildNodes(parent) {

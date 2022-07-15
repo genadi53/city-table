@@ -45,6 +45,13 @@ const main = async () => {
         res.json(cities)
     })
 
+    app.get("/country/:city", async (req, res) => {
+        const { city } = req.params;
+        const country = await getCountryByCity(city)
+        // console.log(country)
+        res.json(country)
+    })
+
     app.listen(PORT, () => {
         console.log('Server started!')
     })
@@ -89,6 +96,18 @@ const main = async () => {
     const getCitiesByCountry = async (country) => {
         const pr = await new Promise((resolve, reject) => {
             connection.query(`select distinct city from wp_my_points_v2 where country = '${country}';`, 
+            function (error, results, fields) {
+                if (error) throw error;
+                // console.log(results);
+                resolve(results)
+            });
+        });
+        return pr;
+    }
+
+    const getCountryByCity = async (city) => {
+        const pr = await new Promise((resolve, reject) => {
+            connection.query(`select distinct country from wp_my_points_v2 where city = '${city}';`, 
             function (error, results, fields) {
                 if (error) throw error;
                 // console.log(results);
