@@ -31,9 +31,9 @@
             
                 <div class="mb-1 ms-1">
                     <label for="from">Population from: </label>
-                    <input type="number" name="from" id="from_input" autocomplete="off" min=0 step=10000>
+                    <input type="number" name="from" id="from_input" autocomplete="off" min=0>
                     <label for="from"> to: </label>
-                    <input type="number" name="to" id="to_input" autocomplete="off" min=0 step=10000>
+                    <input type="number" name="to" id="to_input" autocomplete="off" min=0>
                 </div>
                 <div>
                     <button class="btn btn-primary ms-1" id="submitBtn">Apply Filters</button>
@@ -91,24 +91,40 @@
                         elm.value = c.city;
                         cityDataList.appendChild(elm);
                     })
-                } // ZC11318-LQXK-B62N 
+                }
 
             })  
 
-            // const submitBtn = document.getElementById("submitBtn")
-            // submitBtn.addEventListener("click", (e) => {
-            //     alert(countryInput.value)
-            // })  
-
-            let cityValue = "";
-            const cityInput = document.getElementById("city_input")
-            cityInput.addEventListener("input", async (e) => {
-                console.log(cityInput.value)
-                cityValue = cityInput.value;
-                if(countryValue){
+            
+            // let cityValue = "";
+            // const cityInput = document.getElementById("city_input")
+            // cityInput.addEventListener("input", async (e) => {
+            //     console.log(cityInput.value)
+            //     cityValue = cityInput.value;
+            //     if(countryValue){
                    
+            //     }
+            // }) 
+
+            const from = document.getElementById("from_input")
+            const to = document.getElementById("to_input")
+
+            const submitBtn = document.getElementById("submitBtn");
+            const populationCheck = (e) => {
+                if(from.value && parseInt(from.value) !== NaN && to.value && parseInt(from.value) !== NaN){
+                    if(parseInt(from.value) > parseInt(to.value)){
+                        submitBtn.disabled = true;
+                    } else {
+                        submitBtn.disabled = false;
+                    }
                 }
-            }) 
+            }
+            to.addEventListener("input", (e) => populationCheck(e))
+            from.addEventListener("input", (e) => populationCheck(e))
+
+               
+            
+
 
             function removeAllChildNodes(parent) {
                 while (parent.firstChild) {

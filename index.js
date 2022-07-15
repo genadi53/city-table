@@ -112,10 +112,10 @@ const main = async () => {
         
         if(filters.from && parseInt(filters.to) !== NaN){
             if(isOther){
-                query += ` and population > ?`;
+                query += ` and population >= ?`;
                 values.push(parseInt(filters.from))
             } else {
-                query += `population > ?`;
+                query += `population >= ?`;
                 values.push(parseInt(filters.from))
                 isOther = true;
             }
@@ -123,10 +123,10 @@ const main = async () => {
         
         if(filters.to && parseInt(filters.to) !== NaN){
             if(isOther){
-                query += ` and population < ?`;
+                query += ` and population <= ?`;
                 values.push(parseInt(filters.to))
             } else {
-                query += `population < ?`;
+                query += `population <= ?`;
                 values.push(parseInt(filters.to))
                 isOther = true;
             }
