@@ -4,7 +4,8 @@
         <style>
         </style>
         <!-- CSS only -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+    <title>Cities Table</title>
     </head>
     <body> 
         <h1>Cities</h1>
@@ -55,16 +56,16 @@
                   </tr>
                 </thead>
                 <tbody table-group-divider>
-                    <% for( let index = 0; index < points.length; index++ ) { %>
+                    <% points.forEach(p =>  { %>
                         <tr>
-                            <th scope="row"><%= points[index].id %> </th>
-                            <td><%= points[index].city %></td>
-                            <td><%= points[index].country %></td>
-                            <td><%= points[index].latitude %></td>
-                            <td><%= points[index].longtitude %></td>
-                            <td><%= points[index].population %></td>
+                            <th scope="row"><%= p.id %> </th>
+                            <td><%= p.city %></td>
+                            <td><%= p.country %></td>
+                            <td><%= p.latitude %></td>
+                            <td><%= p.longtitude %></td>
+                            <td><%= p.population %></td>
                           </tr>   
-                    <% } %>               
+                    <% }) %>               
                 </tbody>
               </table>
         </div>

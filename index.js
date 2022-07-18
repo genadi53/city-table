@@ -1,4 +1,3 @@
-// import { Loader }  from '@googlemaps/js-api-loader';
 import Express from "express";
 import mysql from "mysql";
 import "dotenv/config";
@@ -32,6 +31,13 @@ const main = async () => {
         res.render("index", { points, count: points.length, countries, cities })
     })
 
+    app.get("/wp", async (req, res) => {
+        const points = await getAllPoints();
+        const countries = await getAllCountries();
+        const cities = await getAllCities()
+        res.json({ points, count: points.length, countries, cities })
+    })
+
     app.post("/", async (req, res) => {
         let filters = {...req.body};
         // console.log(filters)
@@ -39,6 +45,24 @@ const main = async () => {
         const countries = await getAllCountries();
         const cities = await getAllCities()
         res.render("index", {points, count: points.length, countries, cities})
+    })
+
+    app.post("/wp", async (req, res) => {
+        console.log(req.body)
+        let filters = {...req.body};
+        const points = await getWithFilters(filters);
+        const countries = await getAllCountries();
+        const cities = await getAllCities()
+        res.json({ points, count: points.length, countries, cities })
+    })
+
+    app.post("/wp/rect", async (req, res) => {
+        let filters = {...req.body};
+        console.log(filters)
+        const points = await getAllCitiesInRect(filters);
+        const countries = await getAllCountries();
+        const cities = await getAllCities()
+        res.json({points, count: points.length, countries, cities  })
     })
 
     app.get("/cities/:country", async (req, res) => {
@@ -76,13 +100,13 @@ const main = async () => {
     })
 
     app.listen(PORT, () => {
-        console.log('Server started!')
+        console.log(`Server started on port ${PORT}!`)
     })
 
 
     const getAllPoints = async () => {
         const pr = await new Promise((resolve, reject) => {
-            connection.query(`select * from wp_my_points_v2;`, 
+            connection.query(`select id, city, region, country, latitude, longtitude, population from wp_my_points_v2;`, 
             function (error, results, fields) {
                 if (error) throw error;
                 // console.log(results);
@@ -141,13 +165,13 @@ const main = async () => {
     }
 
     const getWithFilters = async (filters) => {
-        
-        let query = `select * from wp_my_points_v2 where `;
+        console.log(filters)
+        let query = `select id, city, region, country, latitude, longtitude, population from wp_my_points_v2  `;
         let isOther = false;
         const values = [];
         
         if(filters.Country){
-            query += `country = ?`;
+            query += ` where country = ?`;
             values.push(filters.Country)
             isOther = true;
         }
@@ -157,7 +181,7 @@ const main = async () => {
                 query += ` and population >= ?`;
                 values.push(parseInt(filters.from))
             } else {
-                query += `population >= ?`;
+                query += `where population >= ?`;
                 values.push(parseInt(filters.from))
                 isOther = true;
             }
@@ -168,7 +192,7 @@ const main = async () => {
                 query += ` and population <= ?`;
                 values.push(parseInt(filters.to))
             } else {
-                query += `population <= ?`;
+                query += `where population <= ?`;
                 values.push(parseInt(filters.to))
                 isOther = true;
             }
@@ -179,7 +203,7 @@ const main = async () => {
                 query += ` and city = ?`;
                 values.push(filters.City)
             } else {
-                query += `city = ?`;
+                query += `where city = ?`;
                 values.push(filters.City)
                 isOther = true;
             }
@@ -199,6 +223,33 @@ const main = async () => {
         return pr;
     }
 
+    const getAllCitiesInRect = async (rectCoord) => {
+        // rectCoord = {
+        //     east: 10.58825,
+        //     north: 52.70058209319302,
+        //     south: 21.97475755593838,
+        //     west: 5.875562499999978,
+
+        //     // latitude: 22.785
+        //     // longtitude: 5.522777777
+
+        // }
+        
+
+        let query = `select id, city, region, country, latitude, longtitude, population from wp_my_points_v2 
+        where latitude >= ${rectCoord.south} and latitude <= ${rectCoord.north} and longtitude >= ${rectCoord.west} and longtitude <= ${rectCoord.east};`;
+        console.log(query)
+        // console.log(values)
+        const pr = await new Promise((resolve, reject) => {
+            connection.query({ sql: query}, 
+                function (error, results, fields) {
+                    if (error) throw error;
+                    console.log(results.length);
+                    resolve(results)
+            });
+        });
+        return pr;
+    }
 
     async function initMap(points) {
 
