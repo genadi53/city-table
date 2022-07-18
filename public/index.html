@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Map</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+<script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script> 
+<script src="https://unpkg.com/@googlemaps/js-api-loader@1.0.0/dist/index.min.js"></script>
+    <style>
+        #map {
+            height: 70vh;
+        }
+    </style>
+    
+    <script>
+
+        async function getData(){
+            const res =  await fetch("http://localhost:3000/wp");
+            const { points, count, countries, cities } = await res.json();
+            return { points, count, countries, cities };
+        }
+
+       async function initMap(points) {
+
+        const loader = new google.maps.plugins.loader.Loader({
+            apiKey: "AIzaSyCKvUyeNfifyLHInxIN1g6lqiu106pp6GQ",
+            version: "weekly",
+            libraries: ["places", "drawing"]
+        });
+
+        let pointsWithCoords = [];
+            points.forEach(p => {
+                pointsWithCoords = [...pointsWithCoords, {
+                position: {lat: parseFloat(p.latitude) , lng: parseFloat(p.longtitude)},
+                ...p
+            }];
+        })
+
+        let promise = await new Promise((resolve, reject) => {
+        loader
+        .load()
+        .then(() => {
+            // console.log(google)
+            const map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 3,
+                center: pointsWithCoords[0].position,
+            });
+            // const map = new google.maps.Map(document.getElementById("map"), {
+                //     zoom: 3,
+                //     center: pointsWithCoords[0].position,
+                // });
+                const infoWindow = new google.maps.InfoWindow({
+                    content: "",
+                    disableAutoPan: true,
+                });
+                const markers = pointsWithCoords.map((point, idx) => {
+                    const marker = new google.maps.Marker({
+                        position: point.position,
+                        map: map, 
+                    });
+                    
+                    marker.addListener("click", () => {
+                        infoWindow.setContent(`${point.city} 
+                        - population ${point.population}`);
+                        infoWindow.open(map, marker);
+                });
+                return marker;
+            });
+            
+            const markerCluster = new markerClusterer.MarkerClusterer({ map, markers });
+            const drawingManager = new google.maps.drawing.DrawingManager({
+                drawingMode: google.maps.drawing.OverlayType.MARKER,
+                drawingControl: true,
+                drawingControlOptions: {
+                position: google.maps.ControlPosition.TOP_CENTER,
+                drawingModes: [
+                    google.maps.drawing.OverlayType.MARKER,
+                    google.maps.drawing.OverlayType.CIRCLE,
+                    google.maps.drawing.OverlayType.POLYGON,
+                    google.maps.drawing.OverlayType.POLYLINE,
+                    google.maps.drawing.OverlayType.RECTANGLE,
+                ],
+                },
+                markerOptions: {
+                icon: "https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png",
+                },
+                circleOptions: {
+                fillColor: "#ffff00",
+                fillOpacity: 1,
+                strokeWeight: 5,
+                clickable: false,
+                editable: true,
+                zIndex: 1,
+                },
+            });
+            // google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
+            // if (event.type == 'rectangle') {
+            //     var radius = event.overlay.getBounds();
+            // } else {
+            //     console.log(event)
+            // }
+            // });
+
+            drawingManager.addListener("overlaycomplete", function(event) {
+            if (event.type === 'rectangle') {
+                console.log("East -> Ra.hi, West -> Ra.lo")
+                console.log(event.overlay.bounds.Ra)
+                console.log("North -> vb.hi, South -> vb.lo")
+                console.log(event.overlay.bounds.vb)
+                
+                drawRect(map, {north: event.overlay.bounds.vb.hi, south: event.overlay.bounds.vb.lo, east: event.overlay.bounds.Ra.hi, west: event.overlay.bounds.Ra.lo,}) 
+            }
+            })
+
+            
+            // google.maps.event.addListener(rectangle, 'bounds_changed', function() {
+            //     console.log('Bounds changed.');
+            // });
+
+            
+
+            console.log(drawingManager)
+
+            drawingManager.setMap(map);
+
+          resolve(map)
+        })
+        .catch(e => {
+           console.log("Error")
+           console.log(e)
+        });
+        });  
+
+        const countDiv = document.getElementById("count");
+        countDiv.textContent = `Count: ${points.length}`;
+        window.map = promise;
+        // return promise;
+        }
+        
+        function drawRect(map, bounds = {
+                east: 50.58825,
+                north: 52.70058209319302,
+                south: 21.97475755593838,
+                west: 5.875562499999978,
+            }){
+            // Define a rectangle and set its editable property to true.
+            const rectangle = new google.maps.Rectangle({
+                bounds: bounds,
+                editable: false,
+                draggable: false,
+            });
+
+            rectangle.setMap(map);
+
+            // listen to changes
+            ["bounds_changed", "dragstart", "drag", "dragend"].forEach((eventName) => {
+                rectangle.addListener(eventName, () => {
+                console.log({ bounds: rectangle.getBounds()?.toJSON(), eventName });
+                });
+            });
+
+            window.rectangle = rectangle;
+        }
+    </script>
+</head>
+<body>
+    <h3>My Google Maps Demo</h3>
+    <!--The div element for the map -->
+    <div id="map"></div>
+
+    <div id="filters">
+        <form id="form">
+
+            <label for="Country">Country</label>
+            <input id="country-input" list="Country" name="Country" autocomplete="off">
+            <datalist id="Country"></datalist>
+            
+            <label for="City">City</label>
+            <input id="city-input" list="City" name="City" autocomplete="off">
+            <datalist id="City"></datalist>
+
+            <br>
+            <label for="from">Population from: </label>
+            <input id="from" name="from" type="number" min="0">
+            <label for="to"> to </label>
+            <input id="to" name="to" type="number" min="0">
+            <br>
+            <input type="submit" id="submitBtn"></input>
+        </form>
+        <button id="select">Select Area</button>
+        <button id="area-filter">Get All Cities in Area</button>
+        <div id="count"></div>
+    </div>
+    <!-- 
+     The `defer` attribute causes the callback to execute after the full HTML
+     document has been parsed. For non-blocking uses, avoiding race conditions,
+     and consistent behavior across browsers, consider loading using Promises
+     with https://www.npmjs.com/package/@googlemaps/js-api-loader.
+    -->
+    <!-- <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCKvUyeNfifyLHInxIN1g6lqiu106pp6GQ&amp;callback=initMap&amp;v=weekly" defer=""></script> -->
+    <script>
+  
+        window.addEventListener("load", async (e) => {
+        
+        const { points, count, countries, cities } = await getData();
+        await initMap(points);
+
+        const cityDataList = document.getElementById("City"); 
+        let countryValue = "";
+        const countryInput = document.getElementById("country-input")
+        const cityInput = document.getElementById("city-input")
+
+        const countriesDataList = document.getElementById("Country")
+        countries.forEach(c => {
+            const elm = document.createElement("option")
+            elm.value = c.country;
+            countriesDataList.appendChild(elm);
+        })
+        
+        
+        const citiesDatalist = document.getElementById("City")
+        cities.forEach(c => {
+            const elm = document.createElement("option")
+            elm.value = c.city;
+            citiesDatalist.appendChild(elm);
+        })
+
+        countryInput.addEventListener("input", async (e) => {
+            // console.log(countryInput.value)
+            countryValue = countryInput.value;
+
+            if(countryValue.length > 2){
+                const res = await fetch(`http://localhost:3000/cities/${countryValue}`);
+                const fetchedCities = await res.json();
+                removeAllChildNodes(cityDataList);
+                
+                fetchedCities.forEach(c => {
+                    const elm = document.createElement("option")
+                    elm.value = c.city;
+                    cityDataList.appendChild(elm);
+                })
+            }
+
+        })  
+
+        const from = document.getElementById("from")
+        const to = document.getElementById("to")
+
+        const submitBtn = document.getElementById("submitBtn");
+        const populationCheck = (e) => {
+            if(from.value && parseInt(from.value) !== NaN && to.value && parseInt(from.value) !== NaN){
+                if(parseInt(from.value) > parseInt(to.value)){
+                    submitBtn.disabled = true;
+                } else {
+                    submitBtn.disabled = false;
+                }
+            }
+        }
+        to.addEventListener("input", (e) => populationCheck(e))
+        from.addEventListener("input", (e) => populationCheck(e))
+
+        const selectBtn = document.getElementById("select");
+        selectBtn.addEventListener("click", async (e) => {
+            drawRect(map)
+        })
+
+        const areaFilterBtn = document.getElementById("area-filter")
+        areaFilterBtn.addEventListener("click", async (e) => {
+            if(!window.rectangle) return;
+            const res =  await fetch("http://localhost:3000/wp/rect", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(window.rectangle.getBounds()?.toJSON()) 
+            });
+            const { points, count, countries, cities } = await res.json();
+            initMap(points)
+        })
+
+        const form = document.getElementById("form");
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+          
+
+            const params = {
+                Country: countryInput.value,
+                City: cityInput.value,
+                from: from.value,
+                to: to.value
+            }
+
+            // console.log(JSON.stringify(params))
+            const res =  await fetch("http://localhost:3000/wp", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: JSON.stringify(params) 
+            });
+            const { points, count, countries, cities } = await res.json();
+            initMap(points)
+        })
+
+        function removeAllChildNodes(parent) {
+            while (parent.firstChild) {
+                parent.removeChild(parent.firstChild);
+            }
+        }
+    })
+    </script>
+</body>
+</html>
+
+
+    
+   
