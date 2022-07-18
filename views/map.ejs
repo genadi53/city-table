@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Add Map</title>
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+        <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script> 
+        <script type="module" src="/map.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+        <script src="https://unpkg.com/@googlemaps/js-api-loader@1.0.0/dist/index.min.js"></script>
+        <style>
+            #map {
+            /* height: 100%; */
+            height: 70vh;
+            /* width: 80vw; */
+            /* position: initial !important; */
+            }
+
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            
+            </style>
+    </head>
+    
+    <body> 
+        <h3>My Google Maps Demo</h3>
+        <br />
+        <div class="filters">
+            <form action="/map" method="post">
+                <div class="mb-1 ms-1">
+                    <label for="Country">Country </label>
+                    <input type="text" list="Country" name="Country" id="country_input" autocomplete="off">
+                    <datalist id="Country">
+                        <% for( let index = 0; index < countries.length; index++ ) { %>
+                            <option><%= countries[index].country %> </option>
+                            <% } %> 
+                    </datalist>
+
+                    <label for="City">City </label>
+                    <input type="text" list="City" name="City" id="city_input" autocomplete="off">
+                    <datalist id="City">
+                        <% for( let index = 0; index < cities.length; index++ ) { %>
+                            <option><%= cities[index].city %> </option>
+                            <% } %> 
+                    </datalist>
+                </div>
+            
+                <div class="mb-1 ms-1">
+                    <label for="from">Population from: </label>
+                    <input type="number" name="from" id="from_input" autocomplete="off" min=0>
+                    <label for="from"> to: </label>
+                    <input type="number" name="to" id="to_input" autocomplete="off" min=0>
+                </div>
+                <div>
+                    <button class="btn btn-primary ms-1" id="submitBtn">Apply Filters</button>
+                </div>
+            </form>
+        </div>
+        <br />
+        <h2>Results count: <%= count %> </h2>
+        <div id="map"></div>
+        <script>
+            var test = '<%- JSON.stringify(points) %>';
+            window.addEventListener("load", async (e) => {
+                const map = await window.initMap(test, google);
+                console.log("MAP")
+                console.log(map)
+                document.getElementById("map")
+
+            })
+          </script>
+        <!-- 
+            The `defer` attribute causes the callback to execute after the full HTML
+            document has been parsed. For non-blocking uses, avoiding race conditions,
+            and consistent behavior across browsers, consider loading using Promises
+            with https://www.npmjs.com/package/@googlemaps/js-api-loader.
+        -->
+        <script>
+
+            window.addEventListener("load", (e) => {
+    
+                const cityDataList = document.getElementById("City"); 
+    
+                let countryValue = "";
+                const countryInput = document.getElementById("country_input")
+                countryInput.addEventListener("input", async (e) => {
+                    console.log(countryInput.value)
+                    countryValue = countryInput.value;
+    
+                    if(countryValue.length > 2){
+                        const res = await fetch(`http://localhost:3000/cities/${countryValue}`);
+                        const fetchedCities = await res.json();
+                        removeAllChildNodes(cityDataList);
+                        
+                        fetchedCities.forEach(c => {
+                            const elm = document.createElement("option")
+                            elm.value = c.city;
+                            cityDataList.appendChild(elm);
+                        })
+                    }
+    
+                })  
+    
+                // let cityValue = "";
+                // const cityInput = document.getElementById("city_input")
+                // cityInput.addEventListener("input", async (e) => {
+                //     console.log(cityInput.value)
+                //     cityValue = cityInput.value;
+                //     if(countryValue){
+                //     }
+                // }) 
+    
+                const from = document.getElementById("from_input")
+                const to = document.getElementById("to_input")
+    
+                const submitBtn = document.getElementById("submitBtn");
+                const populationCheck = (e) => {
+                    if(from.value && parseInt(from.value) !== NaN && to.value && parseInt(from.value) !== NaN){
+                        if(parseInt(from.value) > parseInt(to.value)){
+                            submitBtn.disabled = true;
+                        } else {
+                            submitBtn.disabled = false;
+                        }
+                    }
+                }
+                to.addEventListener("input", (e) => populationCheck(e))
+                from.addEventListener("input", (e) => populationCheck(e))
+    
+    
+                function removeAllChildNodes(parent) {
+                    while (parent.firstChild) {
+                        parent.removeChild(parent.firstChild);
+                    }
+                }
+    
+            })
+        </script>
+        <!-- <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCKvUyeNfifyLHInxIN1g6lqiu106pp6GQ&amp;callback=initMap&amp;v=weekly" defer=""></script> -->
+    </body>
+</html>

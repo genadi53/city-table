@@ -1,9 +1,11 @@
+// import { Loader }  from '@googlemaps/js-api-loader';
 import Express from "express";
 import mysql from "mysql";
 import "dotenv/config";
 import * as path from "path"
 import * as url from "url";
 import cors from "cors";
+const __dirname = url.fileURLToPath(new URL(".", import.meta.url))
 
 const main = async () => {
 
@@ -18,10 +20,11 @@ const main = async () => {
     
     app.use(cors({ origin: "*", credentials: true }))
     app.set("view engine", "ejs")
-    app.set("views", path.join(url.fileURLToPath(new URL(".", import.meta.url)), "views"))
+    app.set("views", path.join(__dirname, "views"))
+    app.use(Express.static(path.join(__dirname, "public")))
     app.use(Express.urlencoded({extended: true}))
     app.use(Express.json())
-    
+
     app.get("/", async (req, res) => {
         const points = await getAllPoints();
         const countries = await getAllCountries();
@@ -50,6 +53,26 @@ const main = async () => {
         const country = await getCountryByCity(city)
         // console.log(country)
         res.json(country)
+    })
+
+    app.get("/map", async (req, res) => {
+        const points = await getAllPoints();
+        const countries = await getAllCountries();
+        const cities = await getAllCities()
+        res.render("map", {points, count: points.length, countries, cities,  })
+    })
+
+    app.post("/map", async (req, res) => {
+        let filters = {...req.body};
+        const points = await getWithFilters(filters);
+        const countries = await getAllCountries();
+        const cities = await getAllCities()
+        res.render("map", {points, count: points.length, countries, cities})
+    })
+
+    app.get("/points", async (req, res) => {
+        const points = await getAllPoints();
+        res.json(points)
     })
 
     app.listen(PORT, () => {
@@ -174,6 +197,63 @@ const main = async () => {
             });
         });
         return pr;
+    }
+
+
+    async function initMap(points) {
+
+        const loader = new Loader({
+            apiKey: "",
+            version: "weekly",
+            libraries: ["places"]
+          });
+          
+        let pointsWithCoords = [];
+        // const res =  await fetch("http://localhost:3000/points");
+        // const data = await res.json();
+        points.forEach(p => {
+            pointsWithCoords = [...pointsWithCoords, {
+            position: {lat: parseFloat(p.latitude) , lng: parseFloat(p.longtitude)},
+            ...p
+            }];
+        })
+
+        let map = null;
+        loader
+        .load()
+        .then((google) => {
+            map = new google.maps.Map(document.createElement("div"), {
+                center: {
+                  lat: 0,
+                  lng: 0
+                },
+                zoom: 4
+            });
+            const infoWindow = new google.maps.InfoWindow({
+                content: "",
+                disableAutoPan: true,
+            });
+            const markers = pointsWithCoords.map((point, idx) => {
+                const marker = new google.maps.Marker({
+                    position: point.position,
+                    map: map, 
+                });
+    
+                marker.addListener("click", () => {
+                infoWindow.setContent(`${point.city} 
+                - population ${point.population}`);
+                infoWindow.open(map, marker);
+                });
+                return marker;
+            });
+    
+            const markerCluster = new markerClusterer.MarkerClusterer({ map, markers });
+        })
+        .catch(e => {
+            // do something
+        });
+        
+        return map;
     }
 
 }
