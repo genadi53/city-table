@@ -188,9 +188,20 @@
             <label for="to"> to </label>
             <input id="to" name="to" type="number" min="0">
             <br>
+           
+            <label for="x1">Coordinates from x1: </label>
+            <input id="x1" name="from" type="number" min=-90 max=90 step="0.01">
+            <label for="y1"> and y1: </label>
+            <input id="y1" name="from" type="number"  min=-180 max=180 step="0.01">
+            <label for="x2"> to x2: </label>
+            <input id="x2" name="from" type="number" min=-90 max=90 step="0.01">
+            <label for="y2"> and y2: </label>
+            <input id="y2" name="from" type="number" min=-180 max=180 step="0.01">
+            <br>
             <input type="submit" id="submitBtn"></input>
         </form>
-        <button id="select">Select Area</button>
+        <br>
+        <!-- <button id="select">Select Area</button> -->
         <button id="area-filter">Get All Cities in Area</button>
         <div id="count"></div>
     </div>
@@ -249,9 +260,20 @@
         const from = document.getElementById("from")
         const to = document.getElementById("to")
 
+        const x1 = document.getElementById("x1")
+        const x2 = document.getElementById("x2")
+        const y1 = document.getElementById("y1")
+        const y2 = document.getElementById("y2")
+       
+        // const selectBtn = document.getElementById("select");
+        // selectBtn.addEventListener("click", async (e) => {
+        //     drawRect(map)
+        // })
+
+
         const submitBtn = document.getElementById("submitBtn");
         const populationCheck = (e) => {
-            if(from.value && parseInt(from.value) !== NaN && to.value && parseInt(from.value) !== NaN){
+            if(from.value && parseInt(from.value) !== NaN && to.value && parseInt(to.value) !== NaN){
                 if(parseInt(from.value) > parseInt(to.value)){
                     submitBtn.disabled = true;
                 } else {
@@ -259,13 +281,30 @@
                 }
             }
         }
+
+        const coordCheck = (e) => {
+            if(x1.value && parseInt(x1.value) !== NaN && x2.value && parseInt(x2.value) !== NaN &&
+             y1.value && parseInt(y1.value) !== NaN && y2.value && parseInt(y2.value) !== NaN){
+                if((parseInt(x1.value) >  parseInt(x1.value)) || (parseInt(y1.value) >  parseInt(y2.value))) {
+                    submitBtn.disabled = true;
+                } else {
+                    submitBtn.disabled = false;
+                }
+            } else {
+                submitBtn.disabled = true;
+            }
+        }
+        
+
+
+
         to.addEventListener("input", (e) => populationCheck(e))
         from.addEventListener("input", (e) => populationCheck(e))
 
-        const selectBtn = document.getElementById("select");
-        selectBtn.addEventListener("click", async (e) => {
-            drawRect(map)
-        })
+        x1.addEventListener("input", (e) => coordCheck(e))
+        x2.addEventListener("input", (e) => coordCheck(e))
+        y1.addEventListener("input", (e) => coordCheck(e))
+        y2.addEventListener("input", (e) => coordCheck(e))
 
         const areaFilterBtn = document.getElementById("area-filter")
         areaFilterBtn.addEventListener("click", async (e) => {
@@ -285,11 +324,16 @@
             e.preventDefault();
           
 
+
             const params = {
                 Country: countryInput.value,
                 City: cityInput.value,
                 from: from.value,
-                to: to.value
+                to: to.value,
+                x1: x1.value, 
+                x2: x2.value, 
+                y1: y1.value,
+                y2: y2.value,
             }
 
             // console.log(JSON.stringify(params))
@@ -313,7 +357,3 @@
     </script>
 </body>
 </html>
-
-
-    
-   

@@ -209,6 +209,23 @@ const main = async () => {
             }
         }
 
+        if(filters.x1 && filters.y1 && filters.x2 && filters.y2){
+            if(isOther){
+                query += ` and latitude >= ? and latitude <= ? and longtitude >= ? and longtitude <= ?`;
+                values.push(filters.x1)
+                values.push(filters.x2)
+                values.push(filters.y1)
+                values.push(filters.y2)
+            } else {
+                query += `where latitude >= ? and latitude <= ? and longtitude >= ? and longtitude <= ?`;
+                values.push(filters.x1)
+                values.push(filters.x2)
+                values.push(filters.y1)
+                values.push(filters.y2)
+                isOther = true;
+            }
+        }
+
         query += `;`
         console.log(query)
         console.log(values)
