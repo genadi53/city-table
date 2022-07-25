@@ -25,6 +25,8 @@
 
        async function initMap(points) {
 
+        if(!points || points.length <= 0) return;
+
         const loader = new google.maps.plugins.loader.Loader({
             apiKey: "AIzaSyCKvUyeNfifyLHInxIN1g6lqiu106pp6GQ",
             version: "weekly",
@@ -46,7 +48,7 @@
             // console.log(google)
             const map = new google.maps.Map(document.getElementById("map"), {
                 zoom: 3,
-                center: pointsWithCoords[0].position,
+                center: pointsWithCoords[0] ? pointsWithCoords[0].position : {lat: 42, lng : 23},
             });
             // const map = new google.maps.Map(document.getElementById("map"), {
                 //     zoom: 3,
